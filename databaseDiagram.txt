@@ -1,0 +1,29 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table Ventas {
+  sellDetails integer[]
+  amount float
+  canceled boolean [default: false]
+  paid_with varchar
+  created_at timestamp 
+  edited_at timestamp
+}
+
+Table Inventario {
+  id integer [primary key]
+  product_name varchar
+  quantity integer
+  supply_date timestamp
+}
+
+Table Servicios {
+  id integer [primary key]
+  name varchar
+  description text [note: 'Descripción del servicio, que incluye, etc.']
+  products_used integer[]
+}
+
+Ref ProductosVentas: Ventas.sellDetails < Inventario.id
+Ref InventarioServicios: Inventario.id < Servicios.products_used
+Ref ServiciosVentas: Servicios.id < Ventas.sellDetails

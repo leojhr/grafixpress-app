@@ -1,0 +1,1 @@
+<img src="{{asset('images/grafixpress.png')}}" alt="GrafiXpress Logo">
