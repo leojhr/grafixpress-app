@@ -53,8 +53,11 @@ class SaleResource extends Resource
                                 ->label('Producto')
                                 ->options(
                                     Inventory::query()->pluck(column: 'product_name', key: 'id')
-                                )->searchable()->afterStateUpdated(fn ($state, Forms\Set $set) =>
-                                $set('sale_price', Inventory::find($state)?->sale_price ?? 0)),
+                                )->searchable()->afterStateUpdated(
+                                    function ($state, Forms\Set $set, Forms\Get $get) {
+                                        $set('sale_price', Inventory::find($state)?->sale_price ?? 0);
+                                    }
+                                ),
 
                             Forms\Components\TextInput::make('sale_price')
                                 ->label('Precio unitario')
@@ -68,17 +71,22 @@ class SaleResource extends Resource
                                 ->label('Precio final')
                                 ->content(function ($get, $set) {
                                     $result = $get('quantity') * $get('sale_price');
-                                    $set('total', $get('total') + $result);
+                                    $set('total_product', $result);
                                     return $result;
                                 })
-                        ])->columnSpan(3)->itemLabel('')->label('Lista')->collapsible(),
+                        ])->columnSpan(3)->live()->label('Lista')->collapsible()->afterStateUpdated(function ($get,  $set) {
+                            $itemsColumn = array_column($get('SaleProducts'), 'total_product');
+                            $sumaItemsColumn = array_sum($itemsColumn);
+                            $set('total', $sumaItemsColumn);
+                        }),
 
-                        Forms\Components\Placeholder::make('total')->label('Total a cobrar')->disabled()->live()->content(function ($get) {
+                        Forms\Components\Placeholder::make('total')->content(function (callable $get, callable $set, $state) {
 
-
-
-                            return $get('SaleProducts.product_id');
-                        })->afterStateUpdated(fn ($set, ?string $state) => $set('total', $state))
+                            $itemsColumn = array_column($get('SaleProducts'), 'total_product');
+                            $sumaItemsColumn = array_sum($itemsColumn);
+                            $set('../../total', number_format($sumaItemsColumn, 2, ',', '.'));
+                            return $get('../../total');
+                        })
                     ])->columns(4)
 
                 ])->columnSpanFull()
