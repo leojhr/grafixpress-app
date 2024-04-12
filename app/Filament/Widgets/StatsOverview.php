@@ -17,6 +17,8 @@ class StatsOverview extends BaseWidget
             ->whereDate('sale_products.created_at', $today)
             ->value('total_amount');
 
+        if (!$dayEarnings) $dayEarnings = 0;
+
         $weekEarnings = SaleProduct::selectRaw('SUM(sale_products.quantity_sold * inventories.sale_price) as total_amount')
             ->join('inventories', 'sale_products.product_id', '=', 'inventories.id')
             ->whereBetween('sale_products.created_at', [
@@ -25,6 +27,8 @@ class StatsOverview extends BaseWidget
             ])
             ->value('total_amount');
 
+        if (!$weekEarnings) $weekEarnings = 0;
+
         $monthEarnings = SaleProduct::selectRaw('SUM(sale_products.quantity_sold * inventories.sale_price) as total_amount')
             ->join('inventories', 'sale_products.product_id', '=', 'inventories.id')
             ->whereBetween('sale_products.created_at', [
@@ -32,6 +36,8 @@ class StatsOverview extends BaseWidget
                 Carbon::now()->endOfMonth()
             ])
             ->value('total_amount');
+
+        if (!$monthEarnings) $monthEarnings = 0;
 
         return [
             Stat::make('Ganancias de hoy', '$ ' . $dayEarnings ?? 0),
