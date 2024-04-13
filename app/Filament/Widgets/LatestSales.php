@@ -29,7 +29,8 @@ class LatestSales extends BaseWidget
 
                 Tables\Columns\TextColumn::make('total')
                     ->sortable()
-                    ->label('Monto'),
+                    ->label('Monto')
+                    ->money('USD'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->time()

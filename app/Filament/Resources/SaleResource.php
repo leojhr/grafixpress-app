@@ -66,6 +66,8 @@ class SaleResource extends Resource
                                 ->required(),
 
                             Forms\Components\TextInput::make('quantity')->numeric()->default(1)->required()->live()->dehydrated()->label('Cantidad')->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                                if (!$get('product_id')) return;
+
                                 $product = Inventory::find($get('product_id'));
 
                                 if ($product->is_service == true) return;
@@ -118,7 +120,6 @@ class SaleResource extends Resource
 
         return $table
             ->columns([
-
                 Tables\Columns\TextColumn::make('order_number')->label('Número de factura'),
                 Tables\Columns\TextColumn::make('payment_method')->label('Método de pago')
                     ->sortable()->formatStateUsing(fn ($state) => $paymentMethodMapping[$state] ?? $state),
@@ -127,7 +128,7 @@ class SaleResource extends Resource
                     ->money('USD')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->label('Fecha de Venta')->date(),
-            ])
+            ])->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])
