@@ -12,14 +12,14 @@ class StatsOverview extends BaseWidget
     protected function getStats(): array
     {
         $today = Carbon::today();
-        $dayEarnings = SaleProduct::selectRaw('SUM(sale_products.quantity_sold * inventories.sale_price) as total_amount')
+        $dayEarnings = SaleProduct::selectRaw('SUM(sale_products.quantity * inventories.sale_price) as total_amount')
             ->join('inventories', 'sale_products.product_id', '=', 'inventories.id')
             ->whereDate('sale_products.created_at', $today)
             ->value('total_amount');
 
         if (!$dayEarnings) $dayEarnings = 0;
 
-        $weekEarnings = SaleProduct::selectRaw('SUM(sale_products.quantity_sold * inventories.sale_price) as total_amount')
+        $weekEarnings = SaleProduct::selectRaw('SUM(sale_products.quantity * inventories.sale_price) as total_amount')
             ->join('inventories', 'sale_products.product_id', '=', 'inventories.id')
             ->whereBetween('sale_products.created_at', [
                 Carbon::now()->startOfWeek(),
@@ -29,7 +29,7 @@ class StatsOverview extends BaseWidget
 
         if (!$weekEarnings) $weekEarnings = 0;
 
-        $monthEarnings = SaleProduct::selectRaw('SUM(sale_products.quantity_sold * inventories.sale_price) as total_amount')
+        $monthEarnings = SaleProduct::selectRaw('SUM(sale_products.quantity * inventories.sale_price) as total_amount')
             ->join('inventories', 'sale_products.product_id', '=', 'inventories.id')
             ->whereBetween('sale_products.created_at', [
                 Carbon::now()->startOfMonth(),

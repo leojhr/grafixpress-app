@@ -46,7 +46,7 @@ class InventoryResource extends Resource
                 TextColumn::make('quantity')->sortable()->label('Cantidad'),
                 TextColumn::make('sale_price')->sortable()->label('Precio')->money(),
                 TextColumn::make('supply_date')->sortable()->label('Fecha de abastecimiento'),
-                CheckboxColumn::make('is_service')->disabled()->sortable()->label('Es servicio')
+                TextColumn::make('is_service')->sortable()->label('Es servicio')->formatStateUsing(fn ($state) => $state ? 'Si' : 'No')
             ])
             ->filters([
                 //
