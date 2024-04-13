@@ -68,6 +68,8 @@ class SaleResource extends Resource
                             Forms\Components\TextInput::make('quantity')->numeric()->default(1)->required()->live()->dehydrated()->label('Cantidad')->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
                                 $product = Inventory::find($get('product_id'));
 
+                                if ($product->is_service == true) return;
+
                                 if ($product->quantity < intval($get('quantity'))) {
                                     Notification::make()
                                         ->title('La cantidad ingresada no esta disponible.')

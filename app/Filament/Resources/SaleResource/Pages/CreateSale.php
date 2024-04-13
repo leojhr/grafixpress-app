@@ -21,8 +21,9 @@ class CreateSale extends CreateRecord
         foreach ($products as $product) {
             $inventoryProduct = Inventory::where('id', $product->product_id)->first();
 
-            if ($inventoryProduct->quantity > $product->quantity) {
+            if ($inventoryProduct->is_service) continue;
 
+            if ($inventoryProduct->quantity > $product->quantity) {
                 $inventoryProduct->quantity -= $product->quantity;
                 $inventoryProduct->save();
             }
