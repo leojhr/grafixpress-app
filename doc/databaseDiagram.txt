@@ -1,0 +1,40 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+// Para ver este diagrama dirigirse a https://dbdiagram.io
+
+Table Sales {
+  id integer [primary key]
+  order_number varchar
+  payment_method varchar
+  total float
+  deleted_at timestamp
+  created_at timestamp 
+  edited_at timestamp
+}
+
+Table Sale_Products {
+  id integer [primary key]
+  product_id integer
+  sale_id integer
+  sale_price float
+  quantity integer
+  deleted_at timestamp
+  created_at timestamp 
+  edited_at timestamp
+}
+
+Table Inventories {
+  id integer [primary key]
+  product_name varchar
+  description text [note: 'Descripción del servicio, que incluye, etc.']
+  quantity integer
+  supply_cost float
+  sale_price float
+  deleted_at timestamp
+  created_at timestamp 
+  edited_at timestamp
+}
+
+Ref ProductosVentas: Sale_Products.sale_id < Sales.id
+Ref ServiciosVentas: Sale_Products.product_id < Inventories.id
