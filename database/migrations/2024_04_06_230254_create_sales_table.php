@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('order_number')->unique();
             $table->string('payment_method');
-            $table->float('total');
+            $table->decimal('total', 10, 2);
             $table->softDeletes();
             $table->timestamps();
         });

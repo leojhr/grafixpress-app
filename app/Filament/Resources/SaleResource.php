@@ -3,22 +3,15 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SaleResource\Pages;
-use App\Filament\Resources\SaleResource\RelationManagers;
 use App\Models\Inventory;
 use App\Models\Sale;
 use Filament\Forms;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Form;
-use Filament\Forms\FormsComponent;
-use Filament\Infolists\Infolist;
-use App\Filament\Resources\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SaleResource extends Resource
 {
@@ -32,7 +25,6 @@ class SaleResource extends Resource
     {
         return $form
             ->schema([
-
                 Forms\Components\Wizard::make([
                     Forms\Components\Wizard\Step::make(label: 'Detalles de la venta')->schema([
                         Forms\Components\TextInput::make('order_number')->default('GX-' . random_int(1000000, 9999999))->disabled()->dehydrated()->required(),
@@ -55,16 +47,23 @@ class SaleResource extends Resource
                                     Inventory::query()->pluck(column: 'product_name', key: 'id')
                                 )->searchable()->afterStateUpdated(
                                     function ($state, Forms\Set $set, Forms\Get $get) {
-                                        $set('sale_price', Inventory::find($state)?->sale_price ?? 0);
+                                        $product = Inventory::find($state);
+                                        if ($product) {
+                                            $set('sale_price', $product->sale_price);
+                                        } else {
+                                            $set('sale_price', 0);
+                                        }
                                     }
                                 ),
 
                             Forms\Components\TextInput::make('sale_price')
                                 ->label('Precio unitario')
                                 ->disabled()
+                                ->default(fn ($get) => $get('product_id') ? Inventory::find($get('product_id'))?->sale_price ?? 0 : 0)
                                 ->dehydrated()
                                 ->numeric()
                                 ->required(),
+
                             Forms\Components\TextInput::make('quantity')->numeric()->default(1)->required()->live()->dehydrated()->label('Cantidad'),
 
                             Forms\Components\Placeholder::make('total_product')
@@ -72,8 +71,8 @@ class SaleResource extends Resource
                                 ->content(function ($get, $set) {
                                     $result = $get('quantity') * $get('sale_price');
                                     $set('total_product', $result);
-                                    return $result;
-                                })
+                                    return "$" . $result;
+                                }),
                         ])->columnSpan(3)->live()->label('Lista')->collapsible()->afterStateUpdated(function ($get,  $set) {
                             $itemsColumn = array_column($get('SaleProducts'), 'total_product');
                             $sumaItemsColumn = array_sum($itemsColumn);
@@ -84,35 +83,43 @@ class SaleResource extends Resource
 
                             $itemsColumn = array_column($get('SaleProducts'), 'total_product');
                             $sumaItemsColumn = array_sum($itemsColumn);
-                            $set('../../total', number_format($sumaItemsColumn, 2, ',', '.'));
-                            return $get('../../total');
-                        })
-                    ])->columns(4)
+                            $set('../../total', str_replace(',', '.', $sumaItemsColumn));
+                            $set('total', str_replace(',', '.', $sumaItemsColumn));
+                            $set('../../sale_price', $get('total_product'));
 
+                            return number_format($sumaItemsColumn, 2, '.', '');
+                        })->dehydrated()
+                    ])->columns(4)
                 ])->columnSpanFull()
             ]);
     }
 
     public static function table(Table $table): Table
     {
+        $paymentMethodMapping = [
+            'pagomovil' => 'Pago Móvil',
+            'efectivo' => 'Efectivo',
+            'tarjeta' => 'Tarjeta'
+        ];
+
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('payment_method')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('total')
+
+                Tables\Columns\TextColumn::make('order_number')->label('Número de factura'),
+                Tables\Columns\TextColumn::make('payment_method')->label('Método de pago')
+                    ->sortable()->formatStateUsing(fn ($state) => $paymentMethodMapping[$state] ?? $state),
+                Tables\Columns\TextColumn::make('total')->label('Monto')
                     ->numeric()
-                    ->sortable()
-                    ->summarize([
-                        Tables\Columns\Summarizers\Sum::make()->money()
-                    ]),
+                    ->money('USD')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->label('Fecha de Venta')->date(),
             ])
             ->filters([
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\EditAction::make(),
                 ]),
