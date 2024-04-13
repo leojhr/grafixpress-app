@@ -69,7 +69,8 @@ class SaleResource extends Resource
                             Forms\Components\Placeholder::make('total_product')
                                 ->label('Precio final')
                                 ->content(function ($get, $set) {
-                                    $result = $get('quantity') * $get('sale_price');
+
+                                    $result = floatval($get('quantity')) * floatval($get('sale_price'));
                                     $set('total_product', $result);
                                     return "$" . $result;
                                 }),
