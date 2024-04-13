@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -64,7 +65,17 @@ class SaleResource extends Resource
                                 ->numeric()
                                 ->required(),
 
-                            Forms\Components\TextInput::make('quantity')->numeric()->default(1)->required()->live()->dehydrated()->label('Cantidad'),
+                            Forms\Components\TextInput::make('quantity')->numeric()->default(1)->required()->live()->dehydrated()->label('Cantidad')->afterStateUpdated(function (Forms\Set $set, Forms\Get $get) {
+                                $product = Inventory::find($get('product_id'));
+
+                                if ($product->quantity < intval($get('quantity'))) {
+                                    Notification::make()
+                                        ->title('La cantidad ingresada no esta disponible.')
+                                        ->danger()
+                                        ->send();
+                                    $set('quantity', 0);
+                                };
+                            }),
 
                             Forms\Components\Placeholder::make('total_product')
                                 ->label('Precio final')
